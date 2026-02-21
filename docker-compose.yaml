@@ -15,7 +15,10 @@ services:
       - bionicpro-network
 
   keycloak:
-    image: quay.io/keycloak/keycloak:21.1
+    image: keycloak-russian:21.1.1
+    build:
+      context: ./keycloak
+      dockerfile: Dockerfile
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
@@ -24,6 +27,7 @@ services:
       KC_DB_USERNAME: keycloak_user
       KC_DB_PASSWORD: keycloak_password
       KC_HOSTNAME: localhost
+      JAVA_OPTS_APPEND: -Dcom.sun.net.ssl.checkRevocation=false
     command: 
       - start-dev
       - --import-realm
