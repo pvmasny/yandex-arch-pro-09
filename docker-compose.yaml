@@ -11,6 +11,9 @@ services:
       - ./postgres-keycloak-data:/var/lib/postgresql/data
     ports:
       - "5433:5432"
+    networks:
+      - bionicpro-network
+
   keycloak:
     image: quay.io/keycloak/keycloak:21.1
     environment:
@@ -20,6 +23,7 @@ services:
       KC_DB_URL: jdbc:postgresql://keycloak_db:5432/keycloak_db
       KC_DB_USERNAME: keycloak_user
       KC_DB_PASSWORD: keycloak_password
+      KC_HOSTNAME: localhost
     command: 
       - start-dev
       - --import-realm
@@ -29,6 +33,26 @@ services:
       - "8080:8080"
     depends_on:
       - keycloak_db
+    networks:
+      - bionicpro-network
+
+  auth:
+    build:
+      context: ./bionicpro-auth
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"  # Маппинг порта 8000 контейнера на 8000 хоста
+    environment:
+      - ASPNETCORE_URLS=http://+:8000  # Важно! Слушаем на всех интерфейсах порт 8000
+      - Keycloak__AuthServerUrl=http://keycloak:8080
+      - Keycloak__Realm=reports-realm
+      - Keycloak__ClientId=reports-frontend
+      - Keycloak__ClientSecret=your-client-secret
+    depends_on:
+      - keycloak
+    networks:
+      - bionicpro-network
+
   frontend:
     build:
       context: ./frontend
@@ -36,7 +60,12 @@ services:
     ports:
       - "3000:3000"
     environment:
-      REACT_APP_API_URL: http://localhost:8000
-      REACT_APP_KEYCLOAK_URL: http://localhost:8080
-      REACT_APP_KEYCLOAK_REALM: reports-realm
-      REACT_APP_KEYCLOAK_CLIENT_ID: reports-frontend
+      REACT_APP_API_URL: http://localhost:8000  # Для браузера это localhost
+    depends_on:
+      - auth
+    networks:
+      - bionicpro-network
+
+networks:
+  bionicpro-network:
+    driver: bridge

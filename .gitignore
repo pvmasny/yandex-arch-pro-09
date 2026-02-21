@@ -1,2 +1,13 @@
 /postgres-keycloak-data
-2024__yandex-architecture-sso.code-workspace
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+/vendor/
+/Godeps/
+**/obj/
+**/.vs/
+**/bin/
