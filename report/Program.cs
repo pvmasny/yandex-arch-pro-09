@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Mvc;
 using report.Dal;
 using report.Dal.Models;
+using report.Infrastructure;
 using report.Middlewares;
 using report.Models;
 using report.Services;
@@ -47,6 +49,7 @@ builder.Services.AddCors(options =>
 
 // Register services
 builder.Services.AddSingleton<IClickHouseRepository, ClickHouseRepository>();
+builder.Services.AddScoped<IMinioService, MinioService>();
 builder.Services.AddHealthChecks();
 
 builder.Services.AddHttpClient<AuthServiceClient>(client =>
@@ -129,6 +132,79 @@ app.MapGet("/api/reports/user", async (
     }
 })
 .WithName("GetUserReports");
+
+app.MapGet("/api/reports/user2", async (
+    HttpContext context,
+   [AsParameters] ReportRequest request,
+   [FromServices] IClickHouseRepository clickHouse,
+   [FromServices] IMinioService minioService,
+   [FromServices] ILogger<Program> logger,
+   CancellationToken cancellationToken) =>
+{
+    string userId = null;
+    try
+    {
+        //userId = context.Items["CrmId"]?.ToString();
+        userId = "1";
+        logger.LogInformation("Fetching reports for user {UserId}", userId);
+
+        var reportKey = ReportKeyGenerator.GenerateKey(userId, request, request.Format ?? "json");
+        var isExists = await minioService.IsExistsAsync(userId, reportKey);
+
+        if (isExists)
+        {
+            var cdnUrl = await minioService.GeneratePresignedUrlAsync(userId, reportKey);
+            logger.LogInformation("Report found in cache: {CdnUrl}", cdnUrl);
+
+            return Results.Ok(new
+            {
+                cached = true,
+                url = cdnUrl,
+                expiresIn = "1h",
+                message = "Report retrieved from cache"
+            });
+        }
+
+        var reports = await clickHouse.GetUserReportsAsync(
+            userId,
+            request.StartDate,
+            request.EndDate,
+            request.ProsthesisType,
+            request.MuscleGroup,
+            cancellationToken);
+
+        if (!reports.Any())
+        {
+            return Results.NotFound(new
+            {
+                Message = $"No reports found for user {userId}",
+                UserId = userId
+            });
+        }
+
+        await minioService.SaveReportAsync(userId, reportKey, reports, request.Format ?? "json");
+
+        var url = await minioService.GeneratePresignedUrlAsync(userId, reportKey);
+
+        return Results.Ok(new
+        {
+            cached = false,
+            url = url,
+            message = "Report generated and cached"
+        });
+
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error processing request for user {UserId}", userId);
+        return Results.Problem(
+            title: "Internal Server Error",
+            detail: ex.Message,
+            statusCode: 500
+        );
+    }
+})
+.WithName("GetUserReports2");
 
 app.MapGet("/api/reports/user/{userId}/summary", async (
     string userId,

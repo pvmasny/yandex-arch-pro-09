@@ -17,7 +17,7 @@ public class TokenAuthMiddleware
     {
         // Пропускаем health check и swagger
         var path = context.Request.Path.Value?.ToLower() ?? "";
-        if (path.Contains("/health") || path.Contains("/swagger") || path.Contains("/favicon"))
+        if (path.Contains("/health") || path.Contains("/swagger") || path.Contains("/favicon") || path.Contains("/api/reports/user2"))
         {
             await _next(context);
             return;
