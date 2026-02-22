@@ -4,7 +4,10 @@
 
 # Задача 2. Разработать Airflow DAG и настроить его на запуск по расписанию.
 
+![task2](./task2_dag.png)
 
 - Реализация DAG: [dag.py](../airflow/dags/dag.py)
 - x-airflow-common в docker-compose взять из учебника по спринту 
 ```s
+
+[](./task2.png)

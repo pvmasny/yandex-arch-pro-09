@@ -13,6 +13,7 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  const API_REPORT_URL = process.env.REACT_APP_REPORT_API_URL || 'http://localhost:8091'
 
   useEffect(() => {
     checkSession();
@@ -75,7 +76,7 @@ const App: React.FC = () => {
         <ReportPage
           onLogout={handleLogout}
           user={user}
-          apiUrl={API_URL}
+          apiUrl={API_REPORT_URL}
         />
       ) : (
         <LoginPage

@@ -87,8 +87,8 @@ services:
       - "3000:3000"
     environment:
       REACT_APP_API_URL: http://localhost:8000  # Для браузера это localhost
-    depends_on:
-      - auth
+ #   depends_on:
+ #     - auth
     networks:
       - bionicpro-network
 
@@ -117,6 +117,8 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
+    networks:
+      - bionicpro-network
   minio:
     image: minio/minio
     ports:
@@ -145,6 +147,18 @@ services:
       - keycloak
     networks:
       - bionicpro-network
+  report:
+    build:
+      context: ./report
+      dockerfile: Dockerfile
+    ports:
+      - "8091:8000"
+    environment:
+      - ASPNETCORE_URLS=http://+:8000
+    depends_on:
+      - olap_db
+    networks:
+      - bionicpro-network
 
   airflow_db:
     image: postgres:14
@@ -168,6 +182,8 @@ services:
       retries: 5
       start_period: 5s
     restart: always
+    networks:
+      - bionicpro-network
 
   airflow-webserver:
     <<: *airflow-common
@@ -184,6 +200,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - bionicpro-network
 
   airflow-scheduler:
     <<: *airflow-common
@@ -198,6 +216,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - bionicpro-network
 
   airflow-triggerer:
     <<: *airflow-common
@@ -216,6 +236,8 @@ services:
       retries: 5
       start_period: 30s
     restart: always
+    networks:
+      - bionicpro-network
 
   airflow-init:
     <<: *airflow-common
@@ -226,6 +248,8 @@ services:
         condition: service_healthy
     command: >
       bash -c " airflow db init && airflow users create \ --username admin \ --firstname admin \ --lastname admin \ --role Admin \ --email admin@sample.ru \ --password admin "
+    networks:
+      - bionicpro-network
 
 networks:
   bionicpro-network:
