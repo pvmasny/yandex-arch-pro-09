@@ -8,6 +8,6 @@
 
 - Реализация DAG: [dag.py](../airflow/dags/dag.py)
 - x-airflow-common в docker-compose взять из учебника по спринту 
-```s
+
 
 ![task2](./task2.png)
