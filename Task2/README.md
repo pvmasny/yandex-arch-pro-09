@@ -10,4 +10,4 @@
 - x-airflow-common в docker-compose взять из учебника по спринту 
 ```s
 
-[](./task2.png)
+![task2](./task2.png)
