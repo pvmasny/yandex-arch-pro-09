@@ -34,7 +34,7 @@ public class AuthServiceClient
     {
         _httpClient = httpClient;
         _logger = logger;
-        _authServiceUrl = "http://localhost:8000";// configuration["AuthService:Url"] ?? "http://auth:8000";
+        _authServiceUrl = "http://auth:8000";
         _httpClient.BaseAddress = new Uri(_authServiceUrl);
         _httpClient.Timeout = TimeSpan.FromSeconds(5);
 
